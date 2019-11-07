@@ -6,7 +6,7 @@ Pour communiquer avec Elastic Search, on utilise souvent un client TCP sur le po
 
 Il existe une 2ème solution pour communiquer avec Elastic Search. Il s'agit de [Java
 High Level Rest Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/master/java-rest-high.html), une bibliothèque développée par Elastic Search et qui utilise
-le protocole HTTP (port 9300). Nous allons utiliser cette 2ème solution dans ce tutoriel.
+le protocole HTTP sur le port 9300. Nous allons utiliser cette 2ème solution dans ce tutoriel.
 1. Installation
 
     1. Environnement
@@ -62,7 +62,7 @@ le protocole HTTP (port 9300). Nous allons utiliser cette 2ème solution dans ce
 
 2. [Java High Level Rest Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/master/java-rest-high.html)
 
-  1. Configuration du client
+    1. Configuration du client
 
         - fichier `src/main/resources/application.properties`
 
@@ -110,10 +110,9 @@ le protocole HTTP (port 9300). Nous allons utiliser cette 2ème solution dans ce
 		  }
           ```
 
-  2. Model `User`
+    2. Model `User`
 
         ```java
-
          package com.syscom.demojhlrc.beans;
 
          import java.util.List;
@@ -136,12 +135,11 @@ le protocole HTTP (port 9300). Nous allons utiliser cette 2ème solution dans ce
         }
         ```
 
-  3. Le DAO des  utilisateurs pour écrire/rechercher/modifier/supprimer des données
-        du serveur Elastic Search.
+    3. Le DAO des  utilisateurs pour écrire/rechercher/modifier/supprimer des données du serveur Elastic Search.
 
-      ```java
-         @Repository
-         public class UserServiceESDAOImpl implements UserServiceESDAO {
+        ```java
+          @Repository
+          public class UserServiceESDAOImpl implements UserServiceESDAO {
 
             private static final Logger logger = LoggerFactory.getLogger(UserServiceESDAOImpl.class);
 
@@ -176,17 +174,7 @@ le protocole HTTP (port 9300). Nous allons utiliser cette 2ème solution dans ce
                 });
             }
 
-    @GetMapping(value = "/search")
-            public List<User> search(@RequestParam(value = "lastName") String lastName) {
-                logger.info("Find user by last name {}.", lastName);
-                return userServiceES.searchByLastName(lastName);
-            }
-
-            @GetMapping
-            public List<User> findAll() {
-                logger.info("Find all users.");
-                return userServiceES.findAll();
-            }          @Override
+            @Override
             public String create(User user) {
                 user.setId(UUID.randomUUID().toString());
                 Map<String, Object> documentMapper = objectMapper.convertValue(user, new TypeReference<Map<String, Object>>() {});
@@ -282,74 +270,17 @@ le protocole HTTP (port 9300). Nous allons utiliser cette 2ème solution dans ce
               }
               return users;
           }
-}
-      ```
+        }
+        ```
 
-  4. Le service métier de traitement des utilisateurs. Ce service est un passe-plat et il utilise le DAO écrit ci-dessus.
+    4. Le service métier de traitement des utilisateurs est un passe-plat qui appelle la DAO ci-dessus (voir la classe `UserServiceImpl`)
+
+    5. Appel du service depuis un controller REST API.
 
       ```java
-         @Service
-         public class UserServiceESImpl implements UserServiceES {
-
-            private static final Logger logger = LoggerFactory.getLogger(UserServiceESImpl.class);
-
-		    private UserServiceESDAO userServiceESDAO;
-
-		    @Override
-	        public void createIndex() {
-	           userServiceESDAO.createIndex();
-	        }
-
-            @Override
-            public String create(User user) throws IOException {
-                logger.info("Create user {}.", user);
-                Assert.notNull(user, "User must not null");
-                return userServiceESDAO.create(user);
-            }
-
-            @Override
-            public User findById(String id) throws IOException {
-                logger.info("Find user by id {}.", id);
-                Assert.notNull(id, "Id User must not null");
-                return userServiceESDAO.findById(id);
-            }
-
-            @Override
-            public String update(User user) throws IOException {
-                logger.info("Update user {}.", user);
-                Assert.notNull(user, "User must not null");
-                return userServiceESDAO.update(user);
-            }
-
-            @Override
-            public String deleteProfileDocument(String id) throws IOException {
-                logger.info("Delete user by id : {}.", id);
-                Assert.notNull(id, "Id User must not null");
-                return userServiceESDAO.deleteProfileDocument(id);
-            }
-
-            @Override
-            public List<User> findAll() throws IOException {
-                logger.info("Find all users.");
-                return userServiceESDAO.findAll();
-            }
-
-            @Override
-            public List<User> searchByLastName(String lastName) throws IOException {
-                logger.info("Search users by last name {}.", lastName);
-                Assert.notNull(lastName, "last name must not null");
-                return userServiceESDAO.searchByLastName(lastName);
-            }
-        }
-      ```
-
-  5. Appel du service depuis un controller REST API.
-
-
-  ```java
-          @RestController
-          @RequestMapping(UserController.PATH)
-          public class UserController {
+        @RestController
+        @RequestMapping(UserController.PATH)
+        public class UserController {
 
             private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
